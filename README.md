@@ -17,6 +17,12 @@ For a physical iPhone, deploy the static build (`npm run build`) to an HTTPS hos
 - `npm run build` — type-check and create `dist/`
 - `npm run preview` — inspect a production build locally
 
+## Deploy to GitHub Pages
+
+Pushing to `main` automatically builds and deploys the site through GitHub Actions. In the repository on GitHub, open **Settings → Pages** and set the source to **GitHub Actions** once. The site will be available at `https://dnclv.github.io/Golf-Web-PoC/` after a successful workflow run.
+
+GitHub Pages provides HTTPS. Open that URL directly in Safari on the iPhone, then tap **Enable motion sensors**; do not load the page in an embedded browser.
+
 ## Data handling
 
 Recordings live only in browser memory until exported as CSV. The exporter leaves unavailable values blank. Raw browser-event fields are never overwritten by calibration or analysis. Do not treat these readings as club-head speed.
