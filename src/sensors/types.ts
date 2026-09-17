@@ -8,7 +8,12 @@ export interface SensorSnapshot {
   accelerationIncludingGravity: AxisValues;
   rotationRate: AngleValues;
   orientation: AngleValues;
-  interval: number | null;
+  /** Browser-provided DeviceMotionEvent.interval; its unit/meaning is browser-defined. */
+  rawEventInterval: number | null;
+  /** Derived from consecutive received timestamps for the same sensor stream. */
+  observedIntervalMs: number | null;
+  /** Derived from observedIntervalMs; never supplied by the browser. */
+  observedFrequencyHz: number | null;
   source: 'motion' | 'orientation';
 }
 
@@ -19,5 +24,8 @@ export interface SensorStatus {
   orientationPermission: 'not-required' | 'prompt' | 'granted' | 'denied' | 'unavailable';
   motionEvents: number;
   orientationEvents: number;
-  frequencyHz: number | null;
+  motionObservedFrequencyHz: number | null;
+  orientationObservedFrequencyHz: number | null;
+  motionObservedIntervalMs: number | null;
+  orientationObservedIntervalMs: number | null;
 }

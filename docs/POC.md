@@ -16,6 +16,8 @@ No ball physics, golf visuals, accounts, backend, multiplayer, MMR, production m
 
 Deploy over HTTPS, use iPhone Safari, grant permissions from the UI, and capture named trials: stationary baseline, slow rehearsal, normal golf-like motion, and deliberate varied motions. Note phone placement/orientation, iPhone model, iOS version, browser version, and trial intent alongside each exported file. Review event frequency, data completeness, repeatability, spikes, drift, and whether movements are distinguishable before proposing algorithms.
 
+Timing analysis must distinguish raw and observed values. `rawEventInterval` is preserved exactly from the browser and has no assumed unit. `observedIntervalMs` and `observedFrequencyHz` are derived from consecutive receipt timestamps within the same stream (motion or orientation), not from interleaved events across both streams.
+
 ## Success criteria
 
 The app loads on iPhone Safari, permissions work after an explicit tap, useful event streams arrive, every received event is represented in an exported CSV during recording, and the data is sufficient to decide whether native sensor investigation should continue. Desktop absence of APIs must be reported without failure.

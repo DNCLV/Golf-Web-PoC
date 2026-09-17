@@ -26,3 +26,7 @@ GitHub Pages provides HTTPS. Open that URL directly in Safari on the iPhone, the
 ## Data handling
 
 Recordings live only in browser memory until exported as CSV. The exporter leaves unavailable values blank. Raw browser-event fields are never overwritten by calibration or analysis. Do not treat these readings as club-head speed.
+
+### Timing fields
+
+`rawEventInterval` is the unmodified value supplied by `DeviceMotionEvent.interval`. Its units and behavior are browser-defined, so the UI and CSV do not label it as milliseconds. `observedIntervalMs` and `observedFrequencyHz` are separate derived values, calculated from consecutive received timestamps for the same sensor stream. Use observed timing when assessing delivery cadence.

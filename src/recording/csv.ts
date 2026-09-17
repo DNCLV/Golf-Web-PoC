@@ -1,11 +1,11 @@
 import type { Recording } from './Recorder';
 
-const headers = ['recordingId','timestamp','elapsedMs','source','accelerationX','accelerationY','accelerationZ','accelerationIncludingGravityX','accelerationIncludingGravityY','accelerationIncludingGravityZ','rotationAlpha','rotationBeta','rotationGamma','orientationAlpha','orientationBeta','orientationGamma','eventIntervalMs'];
+const headers = ['recordingId','timestamp','elapsedMs','source','accelerationX','accelerationY','accelerationZ','accelerationIncludingGravityX','accelerationIncludingGravityY','accelerationIncludingGravityZ','rotationAlpha','rotationBeta','rotationGamma','orientationAlpha','orientationBeta','orientationGamma','rawEventInterval','observedIntervalMs','observedFrequencyHz'];
 const value = (item: number | string | null): string => item === null ? '' : String(item);
 const escape = (item: string): string => `"${item.replaceAll('"', '""')}"`;
 
 export function recordingToCsv(recording: Recording): string {
-  const rows = recording.samples.map((s) => [s.recordingId, s.timestamp, s.elapsedMs, s.source, s.acceleration.x, s.acceleration.y, s.acceleration.z, s.accelerationIncludingGravity.x, s.accelerationIncludingGravity.y, s.accelerationIncludingGravity.z, s.rotationRate.alpha, s.rotationRate.beta, s.rotationRate.gamma, s.orientation.alpha, s.orientation.beta, s.orientation.gamma, s.interval].map(value).map(escape).join(','));
+  const rows = recording.samples.map((s) => [s.recordingId, s.timestamp, s.elapsedMs, s.source, s.acceleration.x, s.acceleration.y, s.acceleration.z, s.accelerationIncludingGravity.x, s.accelerationIncludingGravity.y, s.accelerationIncludingGravity.z, s.rotationRate.alpha, s.rotationRate.beta, s.rotationRate.gamma, s.orientation.alpha, s.orientation.beta, s.orientation.gamma, s.rawEventInterval, s.observedIntervalMs, s.observedFrequencyHz].map(value).map(escape).join(','));
   return [headers.join(','), ...rows].join('\r\n');
 }
 

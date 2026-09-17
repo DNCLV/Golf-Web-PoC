@@ -17,13 +17,15 @@ export class SensorManager {
   private snapshotListeners = new Set<SnapshotListener>();
   private statusListeners = new Set<StatusListener>();
   private started = false;
-  private lastEventMs: number | null = null;
+  private readonly lastEventMsBySource: Record<SensorSnapshot['source'], number | null> = { motion: null, orientation: null };
   private readonly status: SensorStatus = {
     motionSupported: 'DeviceMotionEvent' in window,
     orientationSupported: 'DeviceOrientationEvent' in window,
     motionPermission: 'DeviceMotionEvent' in window ? 'not-required' : 'unavailable',
     orientationPermission: 'DeviceOrientationEvent' in window ? 'not-required' : 'unavailable',
-    motionEvents: 0, orientationEvents: 0, frequencyHz: null,
+    motionEvents: 0, orientationEvents: 0,
+    motionObservedFrequencyHz: null, orientationObservedFrequencyHz: null,
+    motionObservedIntervalMs: null, orientationObservedIntervalMs: null,
   };
 
   onSnapshot(listener: SnapshotListener): () => void {
@@ -70,7 +72,9 @@ export class SensorManager {
     const snapshot: SensorSnapshot = {
       timestamp: new Date().toISOString(), epochMs: Date.now(), source: 'motion',
       acceleration: axes(event.acceleration), accelerationIncludingGravity: axes(event.accelerationIncludingGravity),
-      rotationRate: angles(event.rotationRate), orientation: { alpha: null, beta: null, gamma: null }, interval: Number.isFinite(event.interval) ? event.interval : null,
+      rotationRate: angles(event.rotationRate), orientation: { alpha: null, beta: null, gamma: null },
+      rawEventInterval: Number.isFinite(event.interval) ? event.interval : null,
+      observedIntervalMs: null, observedFrequencyHz: null,
     };
     this.receive(snapshot);
   };
@@ -81,16 +85,28 @@ export class SensorManager {
       timestamp: new Date().toISOString(), epochMs: Date.now(), source: 'orientation',
       acceleration: { x: null, y: null, z: null }, accelerationIncludingGravity: { x: null, y: null, z: null },
       rotationRate: { alpha: null, beta: null, gamma: null },
-      orientation: { alpha: event.alpha, beta: event.beta, gamma: event.gamma }, interval: null,
+      orientation: { alpha: event.alpha, beta: event.beta, gamma: event.gamma },
+      rawEventInterval: null, observedIntervalMs: null, observedFrequencyHz: null,
     });
   };
 
   private receive(snapshot: SensorSnapshot): void {
-    if (this.lastEventMs !== null) {
-      const delta = snapshot.epochMs - this.lastEventMs;
-      if (delta > 0) this.status.frequencyHz = 1000 / delta;
+    const previousTimestamp = this.lastEventMsBySource[snapshot.source];
+    if (previousTimestamp !== null) {
+      const observedIntervalMs = snapshot.epochMs - previousTimestamp;
+      if (observedIntervalMs > 0) {
+        snapshot.observedIntervalMs = observedIntervalMs;
+        snapshot.observedFrequencyHz = 1000 / observedIntervalMs;
+        if (snapshot.source === 'motion') {
+          this.status.motionObservedIntervalMs = observedIntervalMs;
+          this.status.motionObservedFrequencyHz = snapshot.observedFrequencyHz;
+        } else {
+          this.status.orientationObservedIntervalMs = observedIntervalMs;
+          this.status.orientationObservedFrequencyHz = snapshot.observedFrequencyHz;
+        }
+      }
     }
-    this.lastEventMs = snapshot.epochMs;
+    this.lastEventMsBySource[snapshot.source] = snapshot.epochMs;
     this.snapshotListeners.forEach((listener) => listener(snapshot));
     this.emitStatus();
   }
