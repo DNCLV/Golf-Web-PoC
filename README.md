@@ -30,3 +30,7 @@ Recordings live only in browser memory until exported as CSV. The exporter leave
 ### Timing fields
 
 `rawEventInterval` is the unmodified value supplied by `DeviceMotionEvent.interval`. Its units and behavior are browser-defined, so the UI and CSV do not label it as milliseconds. `observedIntervalMs` and `observedFrequencyHz` are separate derived values, calculated from consecutive received timestamps for the same sensor stream. Use observed timing when assessing delivery cadence.
+
+## Armed swing capture
+
+**Arm swing** is an explicit capture flow for golf-like testing: it gives a five-second setup countdown, then shows **SWING!** and records raw samples for a four-second window. Small movements outside this armed window are not treated as shots, intentionally avoiding continuous false-positive swing detection. The completed capture uses the normal CSV format and remains available for download. This is capture gating only—there is no scoring, shot classification, direction, ball flight, or speed estimate.

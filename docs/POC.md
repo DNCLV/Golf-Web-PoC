@@ -8,6 +8,8 @@ Safari-accessible iPhone motion and orientation events may provide sufficiently 
 
 This experiment requests device permissions explicitly, displays raw device-motion/orientation data, permits display-only baseline calibration, records each received event while manually recording, and exports CSV data.
 
+It also offers an explicitly armed swing capture: the user initiates a five-second setup countdown, followed by a four-second raw-sample swing window. This opt-in window keeps ordinary small movements outside the armed period from being treated as shots and reduces the need for constant false-positive detection. It captures data only; it does not score or classify a swing.
+
 ## Non-goals
 
 No ball physics, golf visuals, accounts, backend, multiplayer, MMR, production mobile architecture, or club-head-speed estimates. No swing-detection thresholds are defined before reviewing real recordings.

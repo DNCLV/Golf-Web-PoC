@@ -1,4 +1,5 @@
 import type { AxisValues, AngleValues, SensorSnapshot, SensorStatus } from '../sensors/types';
+import type { ArmSwingStatus } from '../swing/ArmSwingFlow';
 
 const number = (value: number | null): string => value === null ? '—' : value.toFixed(3);
 const values = (v: AxisValues | AngleValues): string => Object.entries(v).map(([key, value]) => `<span><b>${key}</b>${number(value)}</span>`).join('');
@@ -8,6 +9,7 @@ export function renderApp(): void {
     <header><p class="eyebrow">Motion · Golf Web PoC</p><h1>Sensor laboratory</h1><p>Capture raw iPhone motion data. This is not swing scoring.</p></header>
     <section class="actions"><button id="permission" class="primary">Enable motion sensors</button><button id="calibrate">Calibrate display</button><button id="reset-calibration">Reset calibration</button></section>
     <section class="status" aria-label="Sensor status"><div><b>Motion</b><span id="motion-status">checking</span></div><div><b>Orientation</b><span id="orientation-status">checking</span></div><div><b>Motion observed</b><span id="motion-timing">—</span></div><div><b>Orientation observed</b><span id="orientation-timing">—</span></div></section>
+    <section class="arm-swing" aria-label="Arm a golf swing"><p class="eyebrow">Wii Sports-style capture</p><strong id="swing-state">Ready to arm a swing</strong><p id="swing-detail">Start when you are ready for a five-second setup countdown.</p><button id="arm-swing" class="arm-button">Arm swing</button></section>
     <section class="recording"><div><p class="eyebrow">Recording</p><strong id="recording-state">Ready</strong><span id="sample-count">0 samples</span></div><button id="record" class="record">Start recording</button><button id="download" disabled>Download CSV</button></section>
     <p id="message" class="message">Tap “Enable motion sensors” before testing on iPhone.</p>
     <section class="readings"><h2>Raw sensor values</h2><p class="hint">Values are shown as received. Calibrated display offsets, if set, are not recorded.</p>
@@ -31,6 +33,30 @@ export function updateStatus(status: SensorStatus): void {
 export function updateSnapshot(s: SensorSnapshot): void {
   if (s.source === 'motion') { html('acceleration', values(s.acceleration)); html('gravity', values(s.accelerationIncludingGravity)); html('rotation', values(s.rotationRate)); set('raw-interval', s.rawEventInterval === null ? '—' : String(s.rawEventInterval)); set('observed-interval', s.observedIntervalMs === null ? '—' : s.observedIntervalMs.toFixed(1)); }
   else html('orientation', values(s.orientation));
+}
+export function updateArmSwing(status: ArmSwingStatus, manualRecording: boolean): void {
+  const armButton = document.querySelector<HTMLButtonElement>('#arm-swing')!;
+  const recordButton = document.querySelector<HTMLButtonElement>('#record')!;
+  const detail = document.getElementById('swing-detail')!;
+  const state = document.getElementById('swing-state')!;
+  armButton.disabled = status.state !== 'idle' || manualRecording;
+  recordButton.disabled = status.state !== 'idle';
+  if (status.state === 'countdown') {
+    state.textContent = String(status.countdown);
+    detail.textContent = 'Get into position. Sensor data is not being treated as a swing yet.';
+  } else if (status.state === 'capturing') {
+    state.textContent = 'SWING!';
+    detail.textContent = 'Swing window active — capturing raw sensor samples for 4 seconds.';
+  } else if (status.state === 'completed') {
+    state.textContent = 'Swing captured';
+    detail.textContent = 'The capture is ready to download as CSV.';
+  } else if (manualRecording) {
+    state.textContent = 'Manual recording active';
+    detail.textContent = 'Stop the manual recording before arming a swing.';
+  } else {
+    state.textContent = 'Ready to arm a swing';
+    detail.textContent = 'Start when you are ready for a five-second setup countdown.';
+  }
 }
 export const set = (id: string, text: string): void => { document.getElementById(id)!.textContent = text; };
 export const html = (id: string, value: string): void => { document.getElementById(id)!.innerHTML = value; };
