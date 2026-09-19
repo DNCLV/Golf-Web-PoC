@@ -1,5 +1,6 @@
 import type { AxisValues, AngleValues, SensorSnapshot, SensorStatus } from '../sensors/types';
 import type { ArmSwingStatus } from '../swing/ArmSwingFlow';
+import type { SwingAnalysisResult } from '../swing/SwingAnalyzer';
 
 const number = (value: number | null): string => value === null ? '—' : value.toFixed(3);
 const values = (v: AxisValues | AngleValues): string => Object.entries(v).map(([key, value]) => `<span><b>${key}</b>${number(value)}</span>`).join('');
@@ -10,6 +11,7 @@ export function renderApp(): void {
     <section class="actions"><button id="permission" class="primary">Enable motion sensors</button><button id="calibrate">Calibrate display</button><button id="reset-calibration">Reset calibration</button></section>
     <section class="status" aria-label="Sensor status"><div><b>Motion</b><span id="motion-status">checking</span></div><div><b>Orientation</b><span id="orientation-status">checking</span></div><div><b>Motion observed</b><span id="motion-timing">—</span></div><div><b>Orientation observed</b><span id="orientation-timing">—</span></div></section>
     <section class="arm-swing" aria-label="Arm a golf swing"><p class="eyebrow">Wii Sports-style capture</p><strong id="swing-state">Ready to arm a swing</strong><p id="swing-detail">Start when you are ready for a five-second setup countdown.</p><button id="arm-swing" class="arm-button">Arm swing</button></section>
+    <section class="swing-debug" aria-label="Swing analysis debug"><p class="eyebrow">Swing analysis · debug</p><strong id="analysis-summary">Awaiting an armed capture</strong><div id="analysis-details" class="debug-values"></div></section>
     <section class="recording"><div><p class="eyebrow">Recording</p><strong id="recording-state">Ready</strong><span id="sample-count">0 samples</span></div><button id="record" class="record">Start recording</button><button id="download" disabled>Download CSV</button></section>
     <p id="message" class="message">Tap “Enable motion sensors” before testing on iPhone.</p>
     <section class="readings"><h2>Raw sensor values</h2><p class="hint">Values are shown as received. Calibrated display offsets, if set, are not recorded.</p>
@@ -57,6 +59,13 @@ export function updateArmSwing(status: ArmSwingStatus, manualRecording: boolean,
     state.textContent = 'Ready to arm a swing';
     detail.textContent = 'Start when you are ready for a five-second setup countdown.';
   }
+}
+export function updateSwingAnalysis(result: SwingAnalysisResult | null): void {
+  const summary = document.getElementById('analysis-summary')!; const details = document.getElementById('analysis-details')!;
+  if (result === null) { summary.textContent = 'Awaiting an armed capture'; details.textContent = ''; return; }
+  if (!result.detected) { summary.textContent = 'No swing detected'; details.textContent = `${result.motionSampleCount} motion samples analyzed`; return; }
+  summary.textContent = 'Swing captured';
+  details.innerHTML = `<span>Duration<b>${(result.durationMs! / 1000).toFixed(2)} s</b></span><span>Peak acceleration<b>${result.peakAcceleration!.toFixed(1)} m/s²</b></span><span>Peak rotation<b>${result.peakRotation!.toFixed(1)} °/s</b></span><span>Start<b>${result.startElapsedMs!.toFixed(0)} ms</b></span><span>Peak<b>${result.peakElapsedMs!.toFixed(0)} ms</b></span><span>End<b>${result.endElapsedMs!.toFixed(0)} ms</b></span>`;
 }
 export const set = (id: string, text: string): void => { document.getElementById(id)!.textContent = text; };
 export const html = (id: string, value: string): void => { document.getElementById(id)!.innerHTML = value; };
