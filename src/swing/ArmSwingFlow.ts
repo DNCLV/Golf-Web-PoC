@@ -40,8 +40,9 @@ export class ArmSwingFlow {
     this.clearCountdown();
     this.countdown = null;
     this.state = 'capturing';
-    this.options.onCaptureStart();
     this.emit();
+    // Capture starts at the same transition that exposes the SWING state.
+    this.options.onCaptureStart();
     this.captureTimer = window.setTimeout(() => this.completeCapture(), 4000);
   }
 

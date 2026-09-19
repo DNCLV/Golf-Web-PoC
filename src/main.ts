@@ -7,11 +7,18 @@ import { ArmSwingFlow, type ArmSwingStatus } from './swing/ArmSwingFlow';
 import { renderApp, set, updateArmSwing, updateSnapshot, updateStatus } from './ui/app';
 
 renderApp();
-const sensors = new SensorManager(); const recorder = new Recorder(); const calibration = new Calibration(); let lastRecording: Recording | null = null; let latestSnapshot: import('./sensors/types').SensorSnapshot | null = null; let armStatus: ArmSwingStatus = { state: 'idle', countdown: null };
-const refreshArmSwing = (): void => updateArmSwing(armStatus, recorder.isRecording && armStatus.state === 'idle');
+const sensors = new SensorManager(); const recorder = new Recorder(); const calibration = new Calibration(); let lastRecording: Recording | null = null; let latestSnapshot: import('./sensors/types').SensorSnapshot | null = null; let armStatus: ArmSwingStatus = { state: 'idle', countdown: null }; let armedCaptureHasData: boolean | null = null;
+const refreshArmSwing = (): void => updateArmSwing(armStatus, recorder.isRecording && armStatus.state === 'idle', armedCaptureHasData);
 const armSwing = new ArmSwingFlow({
-  onCaptureStart: () => { lastRecording = recorder.start(); set('recording-state', 'Armed swing capture'); set('sample-count', '0 samples'); },
-  onCaptureEnd: () => { lastRecording = recorder.stop(); set('recording-state', 'Swing capture stopped'); set('sample-count', `${lastRecording?.samples.length ?? 0} samples`); document.querySelector<HTMLButtonElement>('#download')!.disabled = !lastRecording?.samples.length; },
+  onCaptureStart: () => { armedCaptureHasData = null; lastRecording = recorder.start(); set('recording-state', 'Armed swing capture'); set('sample-count', '0 samples'); },
+  onCaptureEnd: () => {
+    lastRecording = recorder.stop();
+    armedCaptureHasData = Boolean(lastRecording?.samples.length);
+    set('recording-state', armedCaptureHasData ? 'Swing capture stopped' : 'No sensor data captured');
+    set('sample-count', `${lastRecording?.samples.length ?? 0} samples`);
+    document.querySelector<HTMLButtonElement>('#download')!.disabled = !armedCaptureHasData;
+    if (!armedCaptureHasData) set('message', 'No sensor data captured. Enable motion sensors first.');
+  },
   onStatusChange: (status) => { armStatus = status; refreshArmSwing(); },
 });
 refreshArmSwing();
@@ -20,6 +27,7 @@ sensors.onSnapshot((snapshot) => { latestSnapshot = snapshot; recorder.record(sn
 
 document.getElementById('permission')!.addEventListener('click', async () => { await sensors.requestPermissions(); set('message', 'Sensor permission request completed. Move the phone and watch for events.'); });
 document.getElementById('record')!.addEventListener('click', () => {
+  if (armStatus.state !== 'idle') return;
   const button = document.querySelector<HTMLButtonElement>('#record')!;
   if (!recorder.isRecording) { lastRecording = recorder.start(); button.textContent = 'Stop recording'; button.classList.add('active'); set('recording-state', 'Recording raw events'); set('sample-count', '0 samples'); refreshArmSwing(); }
   else { lastRecording = recorder.stop(); button.textContent = 'Start recording'; button.classList.remove('active'); set('recording-state', 'Stopped'); set('sample-count', `${lastRecording?.samples.length ?? 0} samples`); document.querySelector<HTMLButtonElement>('#download')!.disabled = !lastRecording?.samples.length; refreshArmSwing(); }

@@ -34,7 +34,7 @@ export function updateSnapshot(s: SensorSnapshot): void {
   if (s.source === 'motion') { html('acceleration', values(s.acceleration)); html('gravity', values(s.accelerationIncludingGravity)); html('rotation', values(s.rotationRate)); set('raw-interval', s.rawEventInterval === null ? '—' : String(s.rawEventInterval)); set('observed-interval', s.observedIntervalMs === null ? '—' : s.observedIntervalMs.toFixed(1)); }
   else html('orientation', values(s.orientation));
 }
-export function updateArmSwing(status: ArmSwingStatus, manualRecording: boolean): void {
+export function updateArmSwing(status: ArmSwingStatus, manualRecording: boolean, armedCaptureHasData: boolean | null): void {
   const armButton = document.querySelector<HTMLButtonElement>('#arm-swing')!;
   const recordButton = document.querySelector<HTMLButtonElement>('#record')!;
   const detail = document.getElementById('swing-detail')!;
@@ -48,8 +48,8 @@ export function updateArmSwing(status: ArmSwingStatus, manualRecording: boolean)
     state.textContent = 'SWING!';
     detail.textContent = 'Swing window active — capturing raw sensor samples for 4 seconds.';
   } else if (status.state === 'completed') {
-    state.textContent = 'Swing captured';
-    detail.textContent = 'The capture is ready to download as CSV.';
+    state.textContent = armedCaptureHasData ? 'Swing captured' : 'No sensor data captured';
+    detail.textContent = armedCaptureHasData ? 'The capture is ready to download as CSV.' : 'Enable motion sensors first, then try again.';
   } else if (manualRecording) {
     state.textContent = 'Manual recording active';
     detail.textContent = 'Stop the manual recording before arming a swing.';
