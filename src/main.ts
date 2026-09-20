@@ -4,14 +4,14 @@ import { downloadRecording } from './recording/csv';
 import { SensorManager } from './sensors/SensorManager';
 import { Calibration } from './sensors/Calibration';
 import { ArmSwingFlow, type ArmSwingStatus } from './swing/ArmSwingFlow';
-import { analyzeSwing } from './swing/SwingAnalyzer';
+import { analyzeSwing, type SwingAnalysisResult } from './swing/SwingAnalyzer';
 import { renderApp, set, updateArmSwing, updateSnapshot, updateStatus, updateSwingAnalysis } from './ui/app';
 
 renderApp();
-const sensors = new SensorManager(); const recorder = new Recorder(); const calibration = new Calibration(); let lastRecording: Recording | null = null; let latestSnapshot: import('./sensors/types').SensorSnapshot | null = null; let armStatus: ArmSwingStatus = { state: 'idle', countdown: null }; let armedCaptureHasData: boolean | null = null;
-const refreshArmSwing = (): void => updateArmSwing(armStatus, recorder.isRecording && armStatus.state === 'idle', armedCaptureHasData);
+const sensors = new SensorManager(); const recorder = new Recorder(); const calibration = new Calibration(); let lastRecording: Recording | null = null; let latestSnapshot: import('./sensors/types').SensorSnapshot | null = null; let armStatus: ArmSwingStatus = { state: 'idle', countdown: null }; let armedCaptureHasData: boolean | null = null; let swingAnalysis: SwingAnalysisResult | null = null;
+const refreshArmSwing = (): void => { updateArmSwing(armStatus, recorder.isRecording && armStatus.state === 'idle', armedCaptureHasData); updateSwingAnalysis(swingAnalysis); };
 const armSwing = new ArmSwingFlow({
-  onCaptureStart: () => { armedCaptureHasData = null; lastRecording = recorder.start(); updateSwingAnalysis(null); set('recording-state', 'Armed swing capture'); set('sample-count', '0 samples'); },
+  onCaptureStart: () => { armedCaptureHasData = null; swingAnalysis = null; lastRecording = recorder.start(); refreshArmSwing(); set('recording-state', 'Armed swing capture'); set('sample-count', '0 samples'); },
   onCaptureEnd: () => {
     lastRecording = recorder.stop();
     armedCaptureHasData = Boolean(lastRecording?.samples.length);
@@ -19,7 +19,7 @@ const armSwing = new ArmSwingFlow({
     set('sample-count', `${lastRecording?.samples.length ?? 0} samples`);
     document.querySelector<HTMLButtonElement>('#download')!.disabled = !armedCaptureHasData;
     if (!armedCaptureHasData) set('message', 'No sensor data captured. Enable motion sensors first.');
-    else { const analysis = analyzeSwing(lastRecording!); updateSwingAnalysis(analysis); if (!analysis.detected) set('message', 'No swing detected'); }
+    else { swingAnalysis = analyzeSwing(lastRecording!); refreshArmSwing(); if (!swingAnalysis.detected) set('message', 'No swing detected'); }
   },
   onStatusChange: (status) => { armStatus = status; refreshArmSwing(); },
 });
