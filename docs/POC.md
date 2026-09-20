@@ -8,7 +8,7 @@ Safari-accessible iPhone motion and orientation events may provide sufficiently 
 
 This experiment requests device permissions explicitly, displays raw device-motion/orientation data, permits display-only baseline calibration, records each received event while manually recording, and exports CSV data.
 
-It also offers an explicitly armed swing capture: the user initiates a five-second setup countdown, followed by a four-second raw-sample swing window. This opt-in window keeps ordinary small movements outside the armed period from being treated as shots and reduces the need for constant false-positive detection. The completed window is recorded first; a separate heuristic then locates the dominant movement region within it using smoothed acceleration and rotation magnitudes. Its configuration will be tuned against multiple real recordings. It captures data only; no final power model, score, or speed estimate exists.
+It also offers an explicitly armed swing capture: the user initiates a five-second setup countdown, followed by a four-second raw-sample swing window. This opt-in window keeps ordinary small movements outside the armed period from being treated as shots and reduces the need for constant false-positive detection. The completed window is recorded first; a separate heuristic then locates the dominant movement region within it using smoothed acceleration and rotation magnitudes. It supports both a strong-peak path and a sustained-swing path that requires joint acceleration/rotation activity over time and adequate integrated activity. Its thresholds remain provisional and need multiple more real recordings. It captures data only; no final power model, score, or speed estimate exists.
 
 ## Non-goals
 
